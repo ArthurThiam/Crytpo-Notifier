@@ -18,17 +18,16 @@ config = configparser.ConfigParser()
 config.read("alerts.ini")
 cardano_alert_lower = config.getfloat('Cardano','alert_lower')
 cardano_alert_upper = config.getfloat('Cardano','alert_upper')
-
-#Call Coinmarketcap API data
-print(config.get('API','key'))
-cmc = CoinMarketCapAPI(config.get('API','key'))
-r = cmc.cryptocurrency_listings_latest()
+print('Using API key:', config.get('API','key'))
 
 #iterate through listings (until 20) until ada is found
 def pull_price(asset):
     iterator = 0
     found = False
     asset_id = 1
+    
+    #Get data and find requested asset
+    r = CoinMarketCapAPI(config.get('API','key')).cryptocurrency_listings_latest()
     while not found and iterator < 20:
         if r.data[iterator]["name"] == asset:
             found = True
