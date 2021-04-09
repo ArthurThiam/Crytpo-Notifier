@@ -14,8 +14,11 @@ def notify(title, message):
     os.system(command)
 
 #Import alert levels
-config = configparser.ConfigParser()
+config = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]}) #magic piece of code from the internet
+
 config.read("alerts.ini")
+asset_list = config.getlist ('List', 'asset_list')
+print(asset_list)
 cardano_alert_lower = config.getfloat('Cardano','alert_lower')
 cardano_alert_upper = config.getfloat('Cardano','alert_upper')
 print('Using API key:', config.get('API','key'))
