@@ -10,6 +10,7 @@ config = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for 
 config.read("settings.ini")
 update_interval = config.getint('General', 'update_interval')
 api_key = config.get('General', 'key')
+asset_list = config.getlist ('Assets', 'asset_list')
 
 # Detect OS and build notification (WINDOWS + MAC OS TO BE ADDED)
 def notify(title, message):
@@ -23,14 +24,14 @@ def print_overview():
     print('API key: ', api_key)
     print('')
     print('ALERTS OVERVIEW')
+    print('tracked assets: ', asset_list)
     #print('     Cardano upper:', cardano_alert_upper)
     #print('     Cardano lower:', cardano_alert_lower)
     print('')
     print('Monitoring markets...')
 
 # Import alert levels from settings.ini
-def import_settings():
-    asset_list = config.getlist ('Assets', 'asset_list')
+def import_settings():    
     alerts_dictionary = {}
     iterator = 0
 
@@ -48,27 +49,25 @@ def import_settings():
     return (alerts_dictionary, asset_list)
 
 # Pull price of all tracked assets using API key #TODO: adapt function to keep checking until all tracked assets are found
-def pull_price_list(settings):
+def pull_price_list(settings, asset_list):
     api_iterator = 0    # iterates through the data pulled with API key. Resets every time an asset is found.
     asset_iterator = 0  # iterates through the list of tracked assets. Never resets.
     found = False
     asset_id = 1
     asset_list = settings[1]
-    price_list = []
+    price_list = {}
     
     #Get data and find requested asset
     r = CoinMarketCapAPI(api_key).cryptocurrency_listings_latest()
     while not found and api_iterator < 100:
         
         # if tracked asset is found, add its price to the price list.
-        print(asset_list[asset_iterator])
-        print(r.data[api_iterator]["name"])
         #time.sleep(0.5)
         if r.data[api_iterator]["name"] == asset_list[asset_iterator]: 
             
-            price_list.append(r.data[api_iterator]["quote"]["USD"]["price"])
+            #price_list.append(r.data[api_iterator]["quote"]["USD"]["price"])            
+            price_list[asset_list[asset_iterator]] = r.data[api_iterator]["quote"]["USD"]["price"]
             asset_iterator += 1 # move on to next tracked asset
-            print('asset found:')
             
             # if this was not the last tracked asset, reset API data iterator
             if asset_iterator < len(asset_list):
@@ -77,14 +76,20 @@ def pull_price_list(settings):
             # if this was the last asset, set found to true
             elif asset_iterator == len(asset_list):
                 found = True
-                print('finished search')
         
-        api_iterator += 1
-                
+        api_iterator += 1                
     return price_list
 
-# Determine what alerts need to be sent
-def update(alerts_dictionary):    
+# Determine what alerts need to be sent. currently only supports one lower and one upper boundary.
+def update(alerts_dictionary, price_list, asset_list):
+    
+    for asset in asset_list:
+        if price_list[asset] < alerts_dictionary[asset][0]:
+            notify("Price Alert", str(asset) + ' is dumping! Last price: ' + str(round(price_list[asset],4)))
+        
+        elif price_list[asset] > alerts_dictionary[asset][1]:
+            notify("Price Alert", str(asset) + ' is pumping! Last price: ' + str(round(price_list[asset],4)))
+            
     return 0    
 
 
@@ -92,13 +97,16 @@ def update(alerts_dictionary):
 
 print_overview()
 settings = import_settings()
-pull_price_list(settings)
-
 
 while running:
-    price = pull_price("Cardano")
-    if price > cardano_alert_upper:
-        notify("Price Alert","Cardano is pumping! Last price: " + str(round(price,4)))
-    elif price < cardano_alert_lower:
-        notify("Price Alert","Cardano is dumping! Last price: " + str(round(price,4)))
+    # prepare inputs for update alert check
+    alerts_dictionary = settings[0]
+    price_list = pull_price_list(settings, asset_list)
+
+    # perform update
+    update(alerts_dictionary, price_list, asset_list)
+    
+    # wait
     time.sleep(update_interval)
+
+
