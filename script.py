@@ -14,7 +14,7 @@ asset_list = config.getlist ('Assets', 'asset_list')
 
 # Detect OS and build notification (WINDOWS + MAC OS TO BE ADDED)
 def notify(title, message):
-    command = f'''notify-send "{title}" "{message}"'''
+    command = f'''notify-send "{title}" "{message}" --urgency=critical'''
     os.system(command)
 
 # Print an overview of settings used by Crypto Alert
