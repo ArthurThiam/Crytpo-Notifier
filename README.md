@@ -2,7 +2,7 @@ Readme will be elaborated in future.
 
 - Rename settings_example.ini to settings.ini
 - For Linux, make sure to apt install 'libnotify-bin' (required for desktop notifications)
-- Execute python script from terminal using $ python3 ./script.py
+- Execute python script from terminal using bash$ python3 ./script.py
 
 Funcionalities to be added in future:
 
