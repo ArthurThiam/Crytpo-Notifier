@@ -18,16 +18,18 @@ def notify(title, message):
     os.system(command)
 
 # Print an overview of settings used by Crypto Alert
-def print_overview():  
+def print_overview(asset_list, alerts_dictionary):  
     print('SETTINGS OVERVIEW:')
     print('update interval [s]: ', update_interval)
     print('API key: ', api_key)
+    print('--------------------------------------')
     print('')
     print('ALERTS OVERVIEW')
-    print('tracked assets: ', asset_list)
-    #print('     Cardano upper:', cardano_alert_upper)
-    #print('     Cardano lower:', cardano_alert_lower)
+    for asset in asset_list:
+        print(asset, ': ', alerts_dictionary[asset][0], '/', alerts_dictionary[asset][1])
+
     print('')
+    print('--------------------------------------')
     print('Monitoring markets...')
 
 # Import alert levels from settings.ini
@@ -48,7 +50,7 @@ def import_settings():
     
     return (alerts_dictionary, asset_list)
 
-# Pull price of all tracked assets using API key #TODO: adapt function to keep checking until all tracked assets are found
+# Pull price of all tracked assets using API key
 def pull_price_list(settings, asset_list):
     api_iterator = 0    # iterates through the data pulled with API key. Resets every time an asset is found.
     asset_iterator = 0  # iterates through the list of tracked assets. Never resets.
@@ -95,8 +97,8 @@ def update(alerts_dictionary, price_list, asset_list):
 
 # ====================================== MAIN ================================================
 
-print_overview()
 settings = import_settings()
+print_overview(asset_list, settings[0])
 
 while running:
     # prepare inputs for update alert check
