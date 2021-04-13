@@ -18,19 +18,25 @@ def notify(title, message):
     os.system(command)
 
 # Print an overview of settings used by Crypto Alert
-def print_overview(asset_list, alerts_dictionary):  
+def print_overview(price_list, asset_list):  
     print('SETTINGS OVERVIEW:')
     print('update interval [s]: ', update_interval)
     print('API key: ', api_key)
-    print('--------------------------------------')
+    print('Tracked assets: ', asset_list)
     print('')
-    print('ALERTS OVERVIEW')
+    print('======================================')
+
+
+# Print an updated overview including the last known prices, excluding program settings
+def print_update(alerts_dictionary, price_list, asset_list):
+    print('')
+    print('ALERTS OVERVIEW (lower/upper [current])')
     for asset in asset_list:
-        print(asset, ': ', alerts_dictionary[asset][0], '/', alerts_dictionary[asset][1])
+        print(asset, ': ', alerts_dictionary[asset][0], '/', alerts_dictionary[asset][1], '|', round(price_list[asset], 4))
 
     print('')
-    print('--------------------------------------')
-    print('Monitoring markets...')
+    print('======================================')
+        
 
 # Import alert levels from settings.ini
 def import_settings():    
@@ -83,8 +89,7 @@ def pull_price_list(settings, asset_list):
     return price_list
 
 # Determine what alerts need to be sent. currently only supports one lower and one upper boundary.
-def update(alerts_dictionary, price_list, asset_list):
-    
+def update(alerts_dictionary, price_list, asset_list):   
     for asset in asset_list:
         if price_list[asset] < alerts_dictionary[asset][0]:
             notify("Price Alert", str(asset) + ' is dumping! Last price: ' + str(round(price_list[asset],4)))
@@ -94,11 +99,10 @@ def update(alerts_dictionary, price_list, asset_list):
             
     return 0    
 
-
 # ====================================== MAIN ================================================
 
 settings = import_settings()
-print_overview(asset_list, settings[0])
+print_overview(settings[0], asset_list)
 
 while running:
     # prepare inputs for update alert check
@@ -107,6 +111,7 @@ while running:
 
     # perform update
     update(alerts_dictionary, price_list, asset_list)
+    print_update(alerts_dictionary, price_list, asset_list)
     
     # wait
     time.sleep(update_interval)
